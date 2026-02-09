@@ -423,6 +423,17 @@ body {
     box-shadow: 0 6px 30px rgba(37,99,235,0.5);
 }
 
+/* 帮助按钮 */
+.fab-help {
+    bottom: 100px;
+    background: #22c55e;
+    box-shadow: 0 4px 20px rgba(34,197,94,0.4);
+}
+
+.fab-help:hover {
+    box-shadow: 0 6px 30px rgba(34,197,94,0.5);
+}
+
 /* 页脚 */
 .footer {
     background: var(--text);
