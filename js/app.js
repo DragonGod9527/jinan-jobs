@@ -64,6 +64,19 @@
         const chunks = await Promise.all(loadPromises);
         allPosts = chunks.flat();
         
+        // 加载Issues新帖子
+        try {
+            const issuesRes = await fetch(CONFIG.dataPath + 'issues.json');
+            const issues = await issuesRes.json();
+            if (issues && issues.length > 0) {
+                // 把Issues转换为帖子格式并添加到列表
+                allPosts = [...issues, ...allPosts];
+                console.log(`加载了 ${issues.length} 条新帖子`);
+            }
+        } catch (e) {
+            console.log('暂无新帖子');
+        }
+        
         // 更新统计
         elements.statsText.textContent = `共收录 ${companies.length} 家公司，${allPosts.length} 条评价`;
         elements.totalCompanies.textContent = companies.length;
