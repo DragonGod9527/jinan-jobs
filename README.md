@@ -1,6 +1,7 @@
 # 💼 济南就业参考
 
 > 让每一个求职者都能看到真实的声音
+> 网站仍在飞速完善中~~~~~~~~~~~~~~~~~
 
 [![GitHub Pages](https://img.shields.io/badge/🌐_在线访问-济南就业参考-blue?style=for-the-badge)](https://dragongod9527.github.io/jinan-jobs/)
 [![Issues](https://img.shields.io/github/issues/DragonGod9527/jinan-jobs?style=for-the-badge&label=💬%20评价数)](https://github.com/DragonGod9527/jinan-jobs/issues)
