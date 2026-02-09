@@ -342,11 +342,14 @@
         const commentsEl = document.getElementById('modalComments');
         if (!commentsEl) return;
         
+        // 生成唯一标识：用帖子ID确保每个帖子有独立的评论区
+        const discussionTerm = `post-${postId}`;
+        
         // 清除旧评论
         commentsEl.innerHTML = `
             <div class="giscus-wrapper">
                 <h3 class="comments-title">💬 发表评论</h3>
-                <p class="comments-hint">登录 GitHub 即可评论，支持 Markdown 格式</p>
+                <p class="comments-hint">登录 GitHub 即可评论（评论区独立于此帖）</p>
                 <div class="giscus"></div>
             </div>
         `;
@@ -359,7 +362,7 @@
         script.setAttribute('data-category', 'General');
         script.setAttribute('data-category-id', 'DIC_kwDORL3m9s4C2E7A');
         script.setAttribute('data-mapping', 'specific');
-        script.setAttribute('data-term', companyName || postId);
+        script.setAttribute('data-term', discussionTerm);  // 用唯一ID区分每个帖子
         script.setAttribute('data-strict', '0');
         script.setAttribute('data-reactions-enabled', '1');
         script.setAttribute('data-emit-metadata', '0');
