@@ -345,11 +345,20 @@
         // 生成唯一标识：用帖子ID确保每个帖子有独立的评论区
         const discussionTerm = `post-${postId}`;
         
-        // 清除旧评论
+        // 显示骨架屏占位
         commentsEl.innerHTML = `
             <div class="giscus-wrapper">
                 <h3 class="comments-title">💬 发表评论</h3>
                 <p class="comments-hint">登录 GitHub 即可评论（评论区独立于此帖）</p>
+                <div class="giscus-skeleton">
+                    <div class="skeleton-avatar"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line skeleton-line-short"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line skeleton-line-medium"></div>
+                    </div>
+                </div>
                 <div class="giscus"></div>
             </div>
         `;
@@ -372,6 +381,17 @@
         script.setAttribute('data-loading', 'lazy');
         script.setAttribute('crossorigin', 'anonymous');
         script.async = true;
+        
+        // Giscus加载完成后隐藏骨架屏
+        window.addEventListener('message', function hideSkeletonHandler(event) {
+            if (event.origin === 'https://giscus.app') {
+                const skeleton = commentsEl.querySelector('.giscus-skeleton');
+                if (skeleton) {
+                    skeleton.style.display = 'none';
+                }
+                window.removeEventListener('message', hideSkeletonHandler);
+            }
+        });
         
         commentsEl.querySelector('.giscus').appendChild(script);
     }
