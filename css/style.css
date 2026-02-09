@@ -350,6 +350,32 @@ body {
     padding: 30px;
 }
 
+/* 评论区样式 */
+.modal-comments {
+    padding: 0 30px 30px;
+}
+
+.giscus-wrapper {
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+}
+
+.comments-title {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.comments-hint {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 15px;
+}
+
+.giscus {
+    min-height: 200px;
+}
+
 .modal-company {
     font-size: 24px;
     font-weight: bold;

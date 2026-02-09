@@ -310,12 +310,54 @@
 
         elements.modal.classList.add('show');
         document.body.style.overflow = 'hidden';
+        
+        // 加载评论
+        loadGiscusComments(post.id, companyName);
     }
 
     // 关闭弹窗
     function closeModal() {
         elements.modal.classList.remove('show');
         document.body.style.overflow = '';
+        // 清除评论区
+        const commentsEl = document.getElementById('modalComments');
+        if (commentsEl) commentsEl.innerHTML = '';
+    }
+
+    // 加载Giscus评论
+    function loadGiscusComments(postId, companyName) {
+        const commentsEl = document.getElementById('modalComments');
+        if (!commentsEl) return;
+        
+        // 清除旧评论
+        commentsEl.innerHTML = `
+            <div class="giscus-wrapper">
+                <h3 class="comments-title">💬 发表评论</h3>
+                <p class="comments-hint">登录 GitHub 即可评论，支持 Markdown 格式</p>
+                <div class="giscus"></div>
+            </div>
+        `;
+        
+        // 动态创建Giscus iframe
+        const script = document.createElement('script');
+        script.src = 'https://giscus.app/client.js';
+        script.setAttribute('data-repo', 'DragonGod9527/jinan-jobs');
+        script.setAttribute('data-repo-id', 'R_kgDORL3m9g');
+        script.setAttribute('data-category', 'General');
+        script.setAttribute('data-category-id', 'DIC_kwDORL3m9s4C2E7A');
+        script.setAttribute('data-mapping', 'specific');
+        script.setAttribute('data-term', companyName || postId);
+        script.setAttribute('data-strict', '0');
+        script.setAttribute('data-reactions-enabled', '1');
+        script.setAttribute('data-emit-metadata', '0');
+        script.setAttribute('data-input-position', 'top');
+        script.setAttribute('data-theme', 'light');
+        script.setAttribute('data-lang', 'zh-CN');
+        script.setAttribute('data-loading', 'lazy');
+        script.setAttribute('crossorigin', 'anonymous');
+        script.async = true;
+        
+        commentsEl.querySelector('.giscus').appendChild(script);
     }
 
     // HTML转义
