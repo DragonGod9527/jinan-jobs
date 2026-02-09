@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>济南就业参考 - 公司评价社区</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">
+                <span class="logo-icon">💼</span>
+                济南就业参考
+            </h1>
+            <p class="tagline">真实的公司评价，帮你避坑</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 搜索区域 -->
+        <section class="search-section">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索公司名称..." autocomplete="off">
+                <button id="searchBtn">🔍 搜索</button>
+            </div>
+            <div class="search-stats">
+                <span id="statsText">加载中...</span>
+            </div>
+        </section>
+
+        <!-- 标签页 -->
+        <div class="tabs">
+            <button class="tab active" data-tab="hot">🔥 最热</button>
+            <button class="tab" data-tab="new">🕐 最新</button>
+            <button class="tab" data-tab="companies">🏢 公司列表</button>
+        </div>
+
+        <!-- 帖子列表 -->
+        <section class="posts-section" id="postsSection">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+            <div class="posts-list" id="postsList"></div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+
+        <!-- 公司列表 -->
+        <section class="companies-section hidden" id="companiesSection">
+            <div class="companies-list" id="companiesList"></div>
+        </section>
+    </main>
+
+    <!-- 帖子详情弹窗 -->
+    <div class="modal" id="postModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- 发帖按钮 -->
+    <a href="https://github.com/DragonGod9527/jinan-jobs/issues/new?template=company-review.md" 
+       target="_blank" 
+       class="fab" 
+       title="发布新评价（需GitHub账号）">
+        ✏️
+    </a>
+
+    <footer class="footer">
+        <div class="container">
+            <p>数据来源于原"济南就业参考"网站存档 | 共收录 <span id="totalCompanies">0</span> 家公司</p>
+            <p class="disclaimer">⚠️ 本站内容均为用户匿名发布，仅供参考，不代表本站立场</p>
+            <p class="github-link">
+                <a href="https://github.com/DragonGod9527/jinan-jobs/issues" target="_blank">
+                    💬 在 GitHub 发布新评价
+                </a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
