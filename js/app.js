@@ -385,7 +385,8 @@
         script.setAttribute('data-reactions-enabled', '1');
         script.setAttribute('data-emit-metadata', '0');
         script.setAttribute('data-input-position', 'bottom');
-        script.setAttribute('data-theme', 'light');
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        script.setAttribute('data-theme', isDark ? 'dark_dimmed' : 'light');
         script.setAttribute('data-lang', 'zh-CN');
         script.setAttribute('data-loading', 'lazy');
         script.setAttribute('crossorigin', 'anonymous');
@@ -410,5 +411,37 @@
         return div.innerHTML;
     }
 
-    document.addEventListener('DOMContentLoaded', init);
+    // ========== 主题切换 ==========
+    function initTheme() {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
+        const toggle = document.getElementById('themeToggle');
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (isDark) {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+                // 同步 Giscus 主题
+                const giscusFrame = document.querySelector('iframe.giscus-frame');
+                if (giscusFrame) {
+                    giscusFrame.contentWindow.postMessage({
+                        giscus: { setConfig: { theme: isDark ? 'light' : 'dark_dimmed' } }
+                    }, 'https://giscus.app');
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        init();
+    });
 })();
