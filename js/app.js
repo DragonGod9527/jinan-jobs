@@ -2,15 +2,21 @@
 (function() {
     'use strict';
 
-    // 配置
     const CONFIG = {
         dataPath: 'data/',
         chunksCount: 11,
         pageSize: 20,
-        githubRepo: 'DragonGod9527/jinan-jobs' // GitHub仓库
+        githubRepo: 'DragonGod9527/jinan-jobs'
     };
 
-    // 状态
+    // SVG 图标集
+    const ICONS = {
+        comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+        user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+        search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'
+    };
+
     let allPosts = [];
     let companies = [];
     let currentPage = 1;
@@ -18,8 +24,7 @@
     let searchKeyword = '';
     let filteredPosts = [];
 
-    // DOM元素
-    const elements = {
+    const el = {
         searchInput: document.getElementById('searchInput'),
         searchBtn: document.getElementById('searchBtn'),
         statsText: document.getElementById('statsText'),
@@ -35,7 +40,7 @@
         totalCompanies: document.getElementById('totalCompanies')
     };
 
-    // 初始化
+    // ========== 初始化 ==========
     async function init() {
         try {
             await loadData();
@@ -43,89 +48,80 @@
             renderPosts();
         } catch (error) {
             console.error('初始化失败:', error);
-            elements.loading.innerHTML = '<p style="color: #ef4444;">加载失败，请刷新重试</p>';
+            el.loading.innerHTML = '<p style="color:#ef4444;padding:40px">加载失败，请刷新重试</p>';
         }
     }
 
-    // 加载数据
+    // ========== 加载数据 ==========
     async function loadData() {
-        // 加载公司索引
         const companiesRes = await fetch(CONFIG.dataPath + 'companies.json');
         companies = await companiesRes.json();
-        
-        // 加载所有帖子分片
+
         const loadPromises = [];
         for (let i = 1; i <= CONFIG.chunksCount; i++) {
             loadPromises.push(
                 fetch(CONFIG.dataPath + `posts_${i}.json`).then(r => r.json())
             );
         }
-        
+
         const chunks = await Promise.all(loadPromises);
         allPosts = chunks.flat();
-        
-        // 加载Issues新帖子
+
+        // 加载 Issues 新帖子
         try {
             const issuesRes = await fetch(CONFIG.dataPath + 'issues.json');
             const issues = await issuesRes.json();
             if (issues && issues.length > 0) {
-                // 把Issues转换为帖子格式并添加到列表
                 allPosts = [...issues, ...allPosts];
-                console.log(`加载了 ${issues.length} 条新帖子`);
             }
         } catch (e) {
             console.log('暂无新帖子');
         }
-        
-        // 更新统计
-        elements.statsText.textContent = `共收录 ${companies.length} 家公司，${allPosts.length} 条评价`;
-        elements.totalCompanies.textContent = companies.length;
-        elements.loading.classList.add('hidden');
+
+        el.statsText.textContent = `共收录 ${companies.length} 家公司，${allPosts.length} 条评价`;
+        el.totalCompanies.textContent = companies.length;
+        el.loading.classList.add('hidden');
     }
 
-    // 绑定事件
+    // ========== 绑定事件 ==========
     function bindEvents() {
-        // 搜索
-        elements.searchBtn.addEventListener('click', handleSearch);
-        elements.searchInput.addEventListener('keypress', (e) => {
+        el.searchBtn.addEventListener('click', handleSearch);
+        el.searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSearch();
         });
 
-        // 标签页切换
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 currentTab = tab.dataset.tab;
                 currentPage = 1;
-                
+
                 if (currentTab === 'companies') {
-                    elements.postsSection.classList.add('hidden');
-                    elements.companiesSection.classList.remove('hidden');
+                    el.postsSection.classList.add('hidden');
+                    el.companiesSection.classList.remove('hidden');
                     renderCompanies();
                 } else {
-                    elements.postsSection.classList.remove('hidden');
-                    elements.companiesSection.classList.add('hidden');
+                    el.postsSection.classList.remove('hidden');
+                    el.companiesSection.classList.add('hidden');
                     renderPosts();
                 }
             });
         });
 
-        // 弹窗关闭
-        elements.modalClose.addEventListener('click', closeModal);
-        elements.modal.addEventListener('click', (e) => {
-            if (e.target === elements.modal) closeModal();
+        el.modalClose.addEventListener('click', closeModal);
+        el.modal.addEventListener('click', (e) => {
+            if (e.target === el.modal) closeModal();
         });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeModal();
         });
     }
 
-    // 搜索处理
+    // ========== 搜索 ==========
     function handleSearch() {
-        searchKeyword = elements.searchInput.value.trim().toLowerCase();
+        searchKeyword = el.searchInput.value.trim().toLowerCase();
         currentPage = 1;
-        
         if (currentTab === 'companies') {
             renderCompanies();
         } else {
@@ -133,50 +129,46 @@
         }
     }
 
-    // 渲染帖子列表
+    // ========== 渲染帖子 ==========
     function renderPosts() {
-        // 过滤
         filteredPosts = allPosts.filter(post => {
             if (!searchKeyword) return true;
             return post.content && post.content.toLowerCase().includes(searchKeyword);
         });
 
-        // 排序
         if (currentTab === 'hot') {
             filteredPosts.sort((a, b) => (b.uv || 0) - (a.uv || 0));
         } else {
             filteredPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         }
 
-        // 分页
         const totalPages = Math.ceil(filteredPosts.length / CONFIG.pageSize);
         const start = (currentPage - 1) * CONFIG.pageSize;
         const pagePosts = filteredPosts.slice(start, start + CONFIG.pageSize);
 
-        // 渲染
         if (pagePosts.length === 0) {
-            elements.postsList.innerHTML = `
-                <div style="text-align: center; padding: 60px; color: #64748b;">
-                    <p style="font-size: 48px; margin-bottom: 20px;">🔍</p>
+            el.postsList.innerHTML = `
+                <div style="text-align:center;padding:60px 20px;color:#9ca3af">
+                    <p style="margin-bottom:8px">${ICONS.search}</p>
                     <p>没有找到相关内容</p>
                 </div>
             `;
-            elements.pagination.innerHTML = '';
+            el.pagination.innerHTML = '';
             return;
         }
 
-        elements.postsList.innerHTML = pagePosts.map(post => {
+        el.postsList.innerHTML = pagePosts.map(post => {
             const companyMatch = post.content ? post.content.match(/####\s*(.+?)[\n\r]/) : null;
             const companyName = companyMatch ? companyMatch[1].trim() : '匿名评价';
-            const contentPreview = post.content ? 
-                post.content.replace(/####.+?\n/, '').replace(/\n/g, ' ').substring(0, 150) + '...' : '';
+            const contentPreview = post.content ?
+                post.content.replace(/####.+?\n/, '').replace(/\n/g, ' ').substring(0, 120) + '...' : '';
             const date = post.created_at ? new Date(post.created_at).toLocaleDateString('zh-CN') : '';
             const repliesCount = post.replies ? post.replies.length : 0;
 
-            // 构建发帖人信息（GitHub Issues帖子有author字段）
+            // 发帖人信息
             let authorHtml = '';
             if (post.author) {
-                const authorName = escapeHtml(post.author);
+                const authorName = esc(post.author);
                 const avatarUrl = `https://github.com/${encodeURIComponent(post.author)}.png?size=40`;
                 authorHtml = `<span class="post-author" onclick="event.stopPropagation()"><img src="${avatarUrl}" alt="" class="author-avatar" onerror="this.style.display='none'"><a href="https://github.com/${encodeURIComponent(post.author)}" target="_blank">${authorName}</a></span>`;
             }
@@ -184,91 +176,81 @@
             return `
                 <article class="post-card" data-id="${post.id}">
                     <div class="post-header">
-                        <h3 class="post-company">${escapeHtml(companyName)}</h3>
-                        <span class="post-meta">${date}</span>
+                        <h3 class="post-company">${esc(companyName)}</h3>
+                        <span class="post-date">${date}</span>
                     </div>
-                    <p class="post-content">${escapeHtml(contentPreview)}</p>
-                    <div class="post-stats">
+                    <p class="post-content">${esc(contentPreview)}</p>
+                    <div class="post-footer">
                         ${authorHtml}
-                        <span>💬 ${repliesCount} 评论</span>
+                        <div class="post-stats">
+                            <span class="stat">${ICONS.comment} ${repliesCount}</span>
+                        </div>
                     </div>
                 </article>
             `;
         }).join('');
 
-        // 绑定点击事件
         document.querySelectorAll('.post-card').forEach(card => {
             card.addEventListener('click', () => {
-                const postId = card.dataset.id;
-                const post = allPosts.find(p => p.id === postId);
+                const post = allPosts.find(p => p.id === card.dataset.id);
                 if (post) showPostDetail(post);
             });
         });
 
-        // 渲染分页
         renderPagination(totalPages);
     }
 
-    // 渲染公司列表
+    // ========== 渲染公司列表 ==========
     function renderCompanies() {
         let filtered = companies;
-        
         if (searchKeyword) {
-            filtered = companies.filter(c => 
-                c.name.toLowerCase().includes(searchKeyword)
-            );
+            filtered = companies.filter(c => c.name.toLowerCase().includes(searchKeyword));
         }
 
-        elements.companiesList.innerHTML = filtered.map(company => `
-            <div class="company-card" data-name="${escapeHtml(company.name)}">
-                <h3 class="company-name">${escapeHtml(company.name)}</h3>
+        el.companiesList.innerHTML = filtered.map(company => `
+            <div class="company-card" data-name="${esc(company.name)}">
+                <h3 class="company-name">${esc(company.name)}</h3>
             </div>
         `).join('');
 
-        // 绑定点击
         document.querySelectorAll('.company-card').forEach(card => {
             card.addEventListener('click', () => {
                 const name = card.dataset.name;
-                elements.searchInput.value = name;
+                el.searchInput.value = name;
                 searchKeyword = name.toLowerCase();
-                
-                // 切换到帖子标签
+
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelector('.tab[data-tab="hot"]').classList.add('active');
                 currentTab = 'hot';
                 currentPage = 1;
-                
-                elements.postsSection.classList.remove('hidden');
-                elements.companiesSection.classList.add('hidden');
+
+                el.postsSection.classList.remove('hidden');
+                el.companiesSection.classList.add('hidden');
                 renderPosts();
             });
         });
     }
 
-    // 渲染分页
+    // ========== 渲染分页 ==========
     function renderPagination(totalPages) {
         if (totalPages <= 1) {
-            elements.pagination.innerHTML = '';
+            el.pagination.innerHTML = '';
             return;
         }
 
         let html = '';
-        
-        // 上一页
-        html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">‹ 上一页</button>`;
-        
-        // 页码
+        html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">上一页</button>`;
+
         const maxVisible = 5;
         let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
         let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-        
         if (endPage - startPage < maxVisible - 1) {
             startPage = Math.max(1, endPage - maxVisible + 1);
         }
 
         if (startPage > 1) {
             html += `<button data-page="1">1</button>`;
-            if (startPage > 2) html += `<span style="padding: 0 10px;">...</span>`;
+            if (startPage > 2) html += `<span class="ellipsis">...</span>`;
         }
 
         for (let i = startPage; i <= endPage; i++) {
@@ -276,17 +258,15 @@
         }
 
         if (endPage < totalPages) {
-            if (endPage < totalPages - 1) html += `<span style="padding: 0 10px;">...</span>`;
+            if (endPage < totalPages - 1) html += `<span class="ellipsis">...</span>`;
             html += `<button data-page="${totalPages}">${totalPages}</button>`;
         }
 
-        // 下一页
-        html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">下一页 ›</button>`;
+        html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">下一页</button>`;
 
-        elements.pagination.innerHTML = html;
+        el.pagination.innerHTML = html;
 
-        // 绑定分页点击
-        elements.pagination.querySelectorAll('button:not([disabled])').forEach(btn => {
+        el.pagination.querySelectorAll('button:not([disabled])').forEach(btn => {
             btn.addEventListener('click', () => {
                 currentPage = parseInt(btn.dataset.page);
                 renderPosts();
@@ -295,73 +275,96 @@
         });
     }
 
-    // 显示帖子详情
+    // ========== 帖子详情 ==========
     function showPostDetail(post) {
         const companyMatch = post.content ? post.content.match(/####\s*(.+?)[\n\r]/) : null;
         const companyName = companyMatch ? companyMatch[1].trim() : '匿名评价';
-        
+
         const addressMatch = post.content ? post.content.match(/\n(.+?)\n主要业务/) : null;
         const address = addressMatch ? addressMatch[1].trim() : '';
-        
-        const contentClean = post.content ? 
+
+        const contentClean = post.content ?
             post.content.replace(/####.+?\n/, '').trim() : '';
 
+        // 发帖人信息
+        let authorHtml = '';
+        if (post.author) {
+            const authorName = esc(post.author);
+            const avatarUrl = `https://github.com/${encodeURIComponent(post.author)}.png?size=48`;
+            authorHtml = `
+                <a class="modal-author" href="https://github.com/${encodeURIComponent(post.author)}" target="_blank">
+                    <img src="${avatarUrl}" alt="" onerror="this.style.display='none'">
+                    <span>${authorName}</span>
+                </a>
+            `;
+        }
+
+        // 评论区
         let repliesHtml = '';
         if (post.replies && post.replies.length > 0) {
             repliesHtml = `
                 <div class="modal-replies">
-                    <h3>💬 ${post.replies.length} 条评论</h3>
-                    ${post.replies.map(reply => `
-                        <div class="reply-item">
-                            <p class="reply-content">${escapeHtml(reply.content || '')}</p>
-                            <p class="reply-time">${reply.created_at ? new Date(reply.created_at).toLocaleString('zh-CN') : ''}</p>
-                        </div>
-                    `).join('')}
+                    <h3>${ICONS.comment} ${post.replies.length} 条历史评论</h3>
+                    ${post.replies.map(reply => {
+                        let replyAuthorHtml = '';
+                        if (reply.author) {
+                            const replyAvatarUrl = `https://github.com/${encodeURIComponent(reply.author)}.png?size=40`;
+                            replyAuthorHtml = `
+                                <div class="reply-header">
+                                    <img src="${replyAvatarUrl}" alt="" class="reply-author-avatar" onerror="this.style.display='none'">
+                                    <span class="reply-author-name">${esc(reply.author)}</span>
+                                </div>
+                            `;
+                        }
+                        return `
+                            <div class="reply-item">
+                                ${replyAuthorHtml}
+                                <p class="reply-content">${esc(reply.content || '')}</p>
+                                <p class="reply-time">${reply.created_at ? new Date(reply.created_at).toLocaleString('zh-CN') : ''}</p>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             `;
         }
 
-        elements.modalBody.innerHTML = `
-            <h2 class="modal-company">${escapeHtml(companyName)}</h2>
-            ${address ? `<p class="modal-address">📍 ${escapeHtml(address)}</p>` : ''}
-            <div class="modal-content-text">${escapeHtml(contentClean)}</div>
+        el.modalBody.innerHTML = `
+            <h2 class="modal-company">${esc(companyName)}</h2>
+            ${authorHtml}
+            ${address ? `<p class="modal-address">${ICONS.pin} ${esc(address)}</p>` : ''}
+            <div class="modal-content-text">${esc(contentClean)}</div>
             ${repliesHtml}
         `;
 
-        elements.modal.classList.add('show');
+        el.modal.classList.add('show');
         document.body.style.overflow = 'hidden';
-        
-        // 加载评论
+
         loadGiscusComments(post.id, companyName);
     }
 
-    // 关闭弹窗
+    // ========== 关闭弹窗 ==========
     function closeModal() {
-        elements.modal.classList.remove('show');
+        el.modal.classList.remove('show');
         document.body.style.overflow = '';
-        // 清除评论区
         const commentsEl = document.getElementById('modalComments');
         if (commentsEl) commentsEl.innerHTML = '';
     }
 
-    // 加载Giscus评论
+    // ========== Giscus 评论 ==========
     function loadGiscusComments(postId, companyName) {
         const commentsEl = document.getElementById('modalComments');
         if (!commentsEl) return;
-        
-        // 生成唯一标识：用帖子ID确保每个帖子有独立的评论区
+
         const discussionTerm = `post-${postId}`;
-        
-        // 显示骨架屏占位
+
         commentsEl.innerHTML = `
             <div class="giscus-wrapper">
-                <h3 class="comments-title">💬 发表评论</h3>
-                <p class="comments-hint">登录 GitHub 即可评论（评论区独立于此帖）</p>
+                <h3 class="comments-title">${ICONS.comment} 发表评论</h3>
+                <p class="comments-hint">登录 GitHub 即可评论</p>
                 <div class="giscus-skeleton">
                     <div class="skeleton-avatar"></div>
                     <div class="skeleton-content">
                         <div class="skeleton-line skeleton-line-short"></div>
-                        <div class="skeleton-line"></div>
                         <div class="skeleton-line"></div>
                         <div class="skeleton-line skeleton-line-medium"></div>
                     </div>
@@ -369,8 +372,7 @@
                 <div class="giscus"></div>
             </div>
         `;
-        
-        // 动态创建Giscus iframe
+
         const script = document.createElement('script');
         script.src = 'https://giscus.app/client.js';
         script.setAttribute('data-repo', 'DragonGod9527/jinan-jobs');
@@ -378,7 +380,7 @@
         script.setAttribute('data-category', 'General');
         script.setAttribute('data-category-id', 'DIC_kwDORL3m9s4C2E7A');
         script.setAttribute('data-mapping', 'specific');
-        script.setAttribute('data-term', discussionTerm);  // 用唯一ID区分每个帖子
+        script.setAttribute('data-term', discussionTerm);
         script.setAttribute('data-strict', '0');
         script.setAttribute('data-reactions-enabled', '1');
         script.setAttribute('data-emit-metadata', '0');
@@ -388,29 +390,25 @@
         script.setAttribute('data-loading', 'lazy');
         script.setAttribute('crossorigin', 'anonymous');
         script.async = true;
-        
-        // Giscus加载完成后隐藏骨架屏
-        window.addEventListener('message', function hideSkeletonHandler(event) {
+
+        window.addEventListener('message', function handler(event) {
             if (event.origin === 'https://giscus.app') {
                 const skeleton = commentsEl.querySelector('.giscus-skeleton');
-                if (skeleton) {
-                    skeleton.style.display = 'none';
-                }
-                window.removeEventListener('message', hideSkeletonHandler);
+                if (skeleton) skeleton.style.display = 'none';
+                window.removeEventListener('message', handler);
             }
         });
-        
+
         commentsEl.querySelector('.giscus').appendChild(script);
     }
 
-    // HTML转义
-    function escapeHtml(text) {
+    // ========== 工具函数 ==========
+    function esc(text) {
         if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    // 启动
     document.addEventListener('DOMContentLoaded', init);
 })();
