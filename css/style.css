@@ -207,6 +207,30 @@ body {
     gap: 5px;
 }
 
+/* 发帖人信息 */
+.post-author {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.post-author a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.post-author a:hover {
+    text-decoration: underline;
+}
+
+.author-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
 /* 公司列表 */
 .companies-list {
     display: grid;

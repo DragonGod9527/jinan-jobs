@@ -173,6 +173,14 @@
             const date = post.created_at ? new Date(post.created_at).toLocaleDateString('zh-CN') : '';
             const repliesCount = post.replies ? post.replies.length : 0;
 
+            // 构建发帖人信息（GitHub Issues帖子有author字段）
+            let authorHtml = '';
+            if (post.author) {
+                const authorName = escapeHtml(post.author);
+                const avatarUrl = `https://github.com/${encodeURIComponent(post.author)}.png?size=40`;
+                authorHtml = `<span class="post-author" onclick="event.stopPropagation()"><img src="${avatarUrl}" alt="" class="author-avatar" onerror="this.style.display='none'"><a href="https://github.com/${encodeURIComponent(post.author)}" target="_blank">${authorName}</a></span>`;
+            }
+
             return `
                 <article class="post-card" data-id="${post.id}">
                     <div class="post-header">
@@ -181,7 +189,7 @@
                     </div>
                     <p class="post-content">${escapeHtml(contentPreview)}</p>
                     <div class="post-stats">
-                        <span>👁️ ${post.uv || 0} 浏览</span>
+                        ${authorHtml}
                         <span>💬 ${repliesCount} 评论</span>
                     </div>
                 </article>
@@ -214,7 +222,6 @@
         elements.companiesList.innerHTML = filtered.map(company => `
             <div class="company-card" data-name="${escapeHtml(company.name)}">
                 <h3 class="company-name">${escapeHtml(company.name)}</h3>
-                <p class="company-views">👁️ ${company.uv || 0} 浏览</p>
             </div>
         `).join('');
 
