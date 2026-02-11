@@ -438,7 +438,10 @@ main.container {
 .post-detail-section {
     margin-top: 30px;
     margin-bottom: 40px;
+    max-width: 800px;
     width: 100%;
+    margin-left: auto;
+    margin-right: auto;
     display: block;
 }
 
