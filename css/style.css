@@ -436,6 +436,7 @@ main.container {
 .post-detail-section {
     margin-top: 30px;
     margin-bottom: 40px;
+    width: 100%;
 }
 
 .back-btn {
@@ -471,6 +472,8 @@ main.container {
 .post-detail-body {
     padding: 36px;
     min-height: 400px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .detail-content.markdown-body {
