@@ -23,6 +23,8 @@
     let currentTab = 'hot';
     let searchKeyword = '';
     let filteredPosts = [];
+    let loadedChunks = 0;
+    let isFullyLoaded = false;
 
     const el = {
         searchInput: document.getElementById('searchInput'),
@@ -34,40 +36,42 @@
         companiesSection: document.getElementById('companiesSection'),
         pagination: document.getElementById('pagination'),
         loading: document.getElementById('loading'),
-        modal: document.getElementById('postModal'),
-        modalBody: document.getElementById('modalBody'),
-        modalClose: document.getElementById('modalClose'),
-        totalCompanies: document.getElementById('totalCompanies')
+        totalCompanies: document.getElementById('totalCompanies'),
+        listView: document.getElementById('listView'),
+        postDetailSection: document.getElementById('postDetailSection'),
+        postDetailBody: document.getElementById('postDetailBody'),
+        postDetailComments: document.getElementById('postDetailComments'),
+        backToList: document.getElementById('backToList'),
+        loadProgress: document.getElementById('loadProgress'),
+        loadProgressBar: document.getElementById('loadProgressBar'),
+        loadProgressText: document.getElementById('loadProgressText')
     };
 
-    // ========== 初始化 ==========
+    // ==================== 初始化 ====================
     async function init() {
         try {
-            await loadData();
+            await loadDataProgressive();
             bindEvents();
-            renderPosts();
+            handleRoute(); // 根据当前 hash 路由渲染
         } catch (error) {
             console.error('初始化失败:', error);
             el.loading.innerHTML = '<p style="color:#ef4444;padding:40px">加载失败，请刷新重试</p>';
         }
     }
 
-    // ========== 加载数据 ==========
-    async function loadData() {
-        const companiesRes = await fetch(CONFIG.dataPath + 'companies.json');
-        companies = await companiesRes.json();
+    // ==================== 按需加载数据 ====================
+    async function loadDataProgressive() {
+        // 第一步：加载 companies.json + posts_1.json（首屏数据）
+        const [companiesRes, posts1Res] = await Promise.all([
+            fetch(CONFIG.dataPath + 'companies.json').then(r => r.json()),
+            fetch(CONFIG.dataPath + 'posts_1.json').then(r => r.json())
+        ]);
 
-        const loadPromises = [];
-        for (let i = 1; i <= CONFIG.chunksCount; i++) {
-            loadPromises.push(
-                fetch(CONFIG.dataPath + `posts_${i}.json`).then(r => r.json())
-            );
-        }
+        companies = companiesRes;
+        allPosts = posts1Res;
+        loadedChunks = 1;
 
-        const chunks = await Promise.all(loadPromises);
-        allPosts = chunks.flat();
-
-        // 加载 Issues 新帖子
+        // 尝试加载 issues
         try {
             const issuesRes = await fetch(CONFIG.dataPath + 'issues.json');
             const issues = await issuesRes.json();
@@ -78,12 +82,134 @@
             console.log('暂无新帖子');
         }
 
-        el.statsText.textContent = `共收录 ${companies.length} 家公司，${allPosts.length} 条评价`;
-        el.totalCompanies.textContent = companies.length;
+        // 更新统计和隐藏loading
+        updateStats();
         el.loading.classList.add('hidden');
+        el.totalCompanies.textContent = companies.length;
+
+        // 显示进度条
+        el.loadProgress.classList.remove('hidden');
+        updateProgressBar();
+
+        // 第二步：后台逐个加载 posts_2 到 posts_11
+        loadRemainingChunks();
     }
 
-    // ========== 绑定事件 ==========
+    async function loadRemainingChunks() {
+        for (let i = 2; i <= CONFIG.chunksCount; i++) {
+            try {
+                const chunk = await fetch(CONFIG.dataPath + `posts_${i}.json`).then(r => r.json());
+                allPosts = allPosts.concat(chunk);
+                loadedChunks = i;
+                updateStats();
+                updateProgressBar();
+
+                // 每加载完一个分片，如果当前在列表视图就刷新
+                if (!el.postDetailSection.classList.contains('hidden')) {
+                    // 在详情页，不刷新列表
+                } else {
+                    renderCurrentView();
+                }
+            } catch (e) {
+                console.error(`加载 posts_${i}.json 失败:`, e);
+            }
+        }
+
+        // 全部加载完成
+        isFullyLoaded = true;
+        el.loadProgress.classList.add('hidden');
+        renderCurrentView();
+    }
+
+    function updateStats() {
+        const loadingText = isFullyLoaded ? '' : ` (加载中 ${loadedChunks}/${CONFIG.chunksCount})`;
+        el.statsText.textContent = `共收录 ${companies.length} 家公司，${allPosts.length} 条评价${loadingText}`;
+    }
+
+    function updateProgressBar() {
+        const pct = (loadedChunks / CONFIG.chunksCount) * 100;
+        el.loadProgressBar.style.width = pct + '%';
+        el.loadProgressText.textContent = `数据加载中 ${loadedChunks}/${CONFIG.chunksCount}...`;
+        if (isFullyLoaded) {
+            el.loadProgressText.textContent = '加载完成';
+        }
+    }
+
+    function renderCurrentView() {
+        if (currentTab === 'companies') {
+            renderCompanies();
+        } else {
+            renderPosts();
+        }
+    }
+
+    // ==================== Hash 路由 ====================
+    function handleRoute() {
+        const hash = window.location.hash;
+
+        if (hash.startsWith('#/post/')) {
+            const postId = decodeURIComponent(hash.slice(7));
+            showPostDetailByRoute(postId);
+        } else if (hash.startsWith('#/search/')) {
+            const keyword = decodeURIComponent(hash.slice(9));
+            el.searchInput.value = keyword;
+            searchKeyword = keyword.toLowerCase();
+            currentPage = 1;
+            showListView();
+            renderPosts();
+        } else {
+            // 默认列表视图
+            showListView();
+            renderPosts();
+        }
+    }
+
+    function showListView() {
+        el.listView.classList.remove('hidden');
+        el.postDetailSection.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function showDetailView() {
+        el.listView.classList.add('hidden');
+        el.postDetailSection.classList.remove('hidden');
+        window.scrollTo({ top: 0 });
+    }
+
+    function showPostDetailByRoute(postId) {
+        const post = allPosts.find(p => String(p.id) === String(postId));
+        if (post) {
+            showPostDetail(post);
+        } else {
+            // 帖子可能还没加载到，显示loading并等待
+            showDetailView();
+            el.postDetailBody.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>正在加载帖子数据...</p>
+                </div>
+            `;
+            // 设置一个轮询，等数据加载完后重试
+            const checkInterval = setInterval(() => {
+                const p = allPosts.find(p => String(p.id) === String(postId));
+                if (p) {
+                    clearInterval(checkInterval);
+                    showPostDetail(p);
+                } else if (isFullyLoaded) {
+                    clearInterval(checkInterval);
+                    el.postDetailBody.innerHTML = `
+                        <div style="text-align: center; padding: 60px; color: var(--gray-500);">
+                            <p style="font-size: 48px; margin-bottom: 20px;">😕</p>
+                            <p>未找到该帖子</p>
+                            <button class="back-btn" onclick="window.location.hash=''">← 返回首页</button>
+                        </div>
+                    `;
+                }
+            }, 500);
+        }
+    }
+
+    // ==================== 绑定事件 ====================
     function bindEvents() {
         el.searchBtn.addEventListener('click', handleSearch);
         el.searchInput.addEventListener('keypress', (e) => {
@@ -109,27 +235,29 @@
             });
         });
 
-        el.modalClose.addEventListener('click', closeModal);
-        el.modal.addEventListener('click', (e) => {
-            if (e.target === el.modal) closeModal();
+        // 返回按钮
+        el.backToList.addEventListener('click', () => {
+            window.history.back();
         });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeModal();
-        });
+
+        // 监听 hash 变化（浏览器前进/后退）
+        window.addEventListener('hashchange', handleRoute);
     }
 
-    // ========== 搜索 ==========
+    // ==================== 搜索处理 ====================
     function handleSearch() {
         searchKeyword = el.searchInput.value.trim().toLowerCase();
         currentPage = 1;
-        if (currentTab === 'companies') {
-            renderCompanies();
+
+        // 更新 hash 路由
+        if (searchKeyword) {
+            window.location.hash = '#/search/' + encodeURIComponent(searchKeyword);
         } else {
-            renderPosts();
+            window.location.hash = '';
         }
     }
 
-    // ========== 渲染帖子 ==========
+    // ==================== 渲染帖子列表 ====================
     function renderPosts() {
         filteredPosts = allPosts.filter(post => {
             if (!searchKeyword) return true;
@@ -161,7 +289,7 @@
             const companyMatch = post.content ? post.content.match(/####\s*(.+?)[\n\r]/) : null;
             const companyName = companyMatch ? companyMatch[1].trim() : '匿名评价';
             const contentPreview = post.content ?
-                post.content.replace(/####.+?\n/, '').replace(/\n/g, ' ').substring(0, 120) + '...' : '';
+                post.content.replace(/####.+?\n/, '').replace(/\n/g, ' ').substring(0, 150) + '...' : '';
             const date = post.created_at ? new Date(post.created_at).toLocaleDateString('zh-CN') : '';
             const repliesCount = post.replies ? post.replies.length : 0;
 
@@ -190,21 +318,25 @@
             `;
         }).join('');
 
+        // 绑定点击事件 → 修改 hash
         document.querySelectorAll('.post-card').forEach(card => {
             card.addEventListener('click', () => {
-                const post = allPosts.find(p => p.id === card.dataset.id);
-                if (post) showPostDetail(post);
+                const postId = card.dataset.id;
+                window.location.hash = '#/post/' + encodeURIComponent(postId);
             });
         });
 
         renderPagination(totalPages);
     }
 
-    // ========== 渲染公司列表 ==========
+    // ==================== 渲染公司列表 ====================
     function renderCompanies() {
         let filtered = companies;
+
         if (searchKeyword) {
-            filtered = companies.filter(c => c.name.toLowerCase().includes(searchKeyword));
+            filtered = companies.filter(c =>
+                c.name.toLowerCase().includes(searchKeyword)
+            );
         }
 
         el.companiesList.innerHTML = filtered.map(company => `
@@ -219,6 +351,7 @@
                 el.searchInput.value = name;
                 searchKeyword = name.toLowerCase();
 
+                // 切换到帖子标签
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelector('.tab[data-tab="hot"]').classList.add('active');
                 currentTab = 'hot';
@@ -226,12 +359,13 @@
 
                 el.postsSection.classList.remove('hidden');
                 el.companiesSection.classList.add('hidden');
-                renderPosts();
+
+                window.location.hash = '#/search/' + encodeURIComponent(searchKeyword);
             });
         });
     }
 
-    // ========== 渲染分页 ==========
+    // ==================== 渲染分页 ====================
     function renderPagination(totalPages) {
         if (totalPages <= 1) {
             el.pagination.innerHTML = '';
@@ -239,11 +373,15 @@
         }
 
         let html = '';
-        html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">上一页</button>`;
 
+        // 上一页
+        html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">‹ 上一页</button>`;
+
+        // 页码
         const maxVisible = 5;
         let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
         let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
         if (endPage - startPage < maxVisible - 1) {
             startPage = Math.max(1, endPage - maxVisible + 1);
         }
@@ -262,7 +400,7 @@
             html += `<button data-page="${totalPages}">${totalPages}</button>`;
         }
 
-        html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">下一页</button>`;
+        html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">下一页 ›</button>`;
 
         el.pagination.innerHTML = html;
 
@@ -275,7 +413,7 @@
         });
     }
 
-    // ========== 帖子详情 ==========
+    // ==================== 帖子详情页（独立页面模式） ====================
     function showPostDetail(post) {
         const companyMatch = post.content ? post.content.match(/####\s*(.+?)[\n\r]/) : null;
         const companyName = companyMatch ? companyMatch[1].trim() : '匿名评价';
@@ -283,8 +421,14 @@
         const addressMatch = post.content ? post.content.match(/\n(.+?)\n主要业务/) : null;
         const address = addressMatch ? addressMatch[1].trim() : '';
 
-        const contentClean = post.content ?
-            post.content.replace(/####.+?\n/, '').trim() : '';
+        // 用 marked 渲染 Markdown
+        const contentClean = post.content ? post.content.trim() : '';
+        let contentHtml = '';
+        if (typeof marked !== 'undefined' && marked.parse) {
+            contentHtml = marked.parse(contentClean);
+        } else {
+            contentHtml = '<pre>' + esc(contentClean) + '</pre>';
+        }
 
         // 发帖人信息
         let authorHtml = '';
@@ -303,9 +447,16 @@
         let repliesHtml = '';
         if (post.replies && post.replies.length > 0) {
             repliesHtml = `
-                <div class="modal-replies">
+                <div class="detail-replies">
                     <h3>${ICONS.comment} ${post.replies.length} 条历史评论</h3>
                     ${post.replies.map(reply => {
+                        let replyContent = '';
+                        if (typeof marked !== 'undefined' && marked.parse) {
+                            replyContent = marked.parse(reply.content || '');
+                        } else {
+                            replyContent = esc(reply.content || '');
+                        }
+
                         let replyAuthorHtml = '';
                         if (reply.author) {
                             const replyAvatarUrl = `https://github.com/${encodeURIComponent(reply.author)}.png?size=40`;
@@ -316,10 +467,11 @@
                                 </div>
                             `;
                         }
+
                         return `
                             <div class="reply-item">
                                 ${replyAuthorHtml}
-                                <p class="reply-content">${esc(reply.content || '')}</p>
+                                <div class="reply-content">${replyContent}</div>
                                 <p class="reply-time">${reply.created_at ? new Date(reply.created_at).toLocaleString('zh-CN') : ''}</p>
                             </div>
                         `;
@@ -328,31 +480,29 @@
             `;
         }
 
-        el.modalBody.innerHTML = `
-            <h2 class="modal-company">${esc(companyName)}</h2>
+        const date = post.created_at ? new Date(post.created_at).toLocaleDateString('zh-CN') : '';
+
+        el.postDetailBody.innerHTML = `
+            <h2 class="detail-company">${esc(companyName)}</h2>
             ${authorHtml}
-            ${address ? `<p class="modal-address">${ICONS.pin} ${esc(address)}</p>` : ''}
-            <div class="modal-content-text">${esc(contentClean)}</div>
+            ${address ? `<p class="detail-address">${ICONS.pin} ${esc(address)}</p>` : ''}
+            <div class="detail-meta">
+                <span>📅 ${date}</span>
+                <span>💬 ${post.replies ? post.replies.length : 0} 评论</span>
+            </div>
+            <div class="detail-content markdown-body">${contentHtml}</div>
             ${repliesHtml}
         `;
 
-        el.modal.classList.add('show');
-        document.body.style.overflow = 'hidden';
+        showDetailView();
 
+        // 加载 Giscus 评论
         loadGiscusComments(post.id, companyName);
     }
 
-    // ========== 关闭弹窗 ==========
-    function closeModal() {
-        el.modal.classList.remove('show');
-        document.body.style.overflow = '';
-        const commentsEl = document.getElementById('modalComments');
-        if (commentsEl) commentsEl.innerHTML = '';
-    }
-
-    // ========== Giscus 评论 ==========
+    // ==================== 加载 Giscus 评论 ====================
     function loadGiscusComments(postId, companyName) {
-        const commentsEl = document.getElementById('modalComments');
+        const commentsEl = el.postDetailComments;
         if (!commentsEl) return;
 
         const discussionTerm = `post-${postId}`;
@@ -392,18 +542,19 @@
         script.setAttribute('crossorigin', 'anonymous');
         script.async = true;
 
-        window.addEventListener('message', function handler(event) {
+        // Giscus 加载完成后隐藏骨架屏
+        window.addEventListener('message', function hideSkeletonHandler(event) {
             if (event.origin === 'https://giscus.app') {
                 const skeleton = commentsEl.querySelector('.giscus-skeleton');
                 if (skeleton) skeleton.style.display = 'none';
-                window.removeEventListener('message', handler);
+                window.removeEventListener('message', hideSkeletonHandler);
             }
         });
 
         commentsEl.querySelector('.giscus').appendChild(script);
     }
 
-    // ========== 工具函数 ==========
+    // ==================== 工具函数 ====================
     function esc(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -411,7 +562,7 @@
         return div.innerHTML;
     }
 
-    // ========== 主题切换 ==========
+    // ==================== 主题切换 ====================
     function initTheme() {
         const saved = localStorage.getItem('theme');
         if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {

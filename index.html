@@ -3,9 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>济南就业参考 - 公司评价社区</title>
+    <title>济南就业参考 - 真实公司评价社区</title>
+    <!-- SEO Meta -->
+    <meta name="description" content="济南就业参考 - 济南本地真实公司评价社区，收录济南各行业公司员工匿名评价，帮助求职者了解真实工作环境，避免踩坑。">
+    <meta name="keywords" content="济南就业,济南公司评价,济南工作,济南求职,公司评价,职场评价,济南招聘,避坑指南,济南公司,工作环境">
+    <!-- Open Graph -->
+    <meta property="og:title" content="济南就业参考 - 真实公司评价社区">
+    <meta property="og:description" content="济南本地真实公司评价社区，收录济南各行业公司员工匿名评价，帮助求职者了解真实工作环境，避免踩坑。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dragongod9527.github.io/jinan-jobs/">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <header class="header">
@@ -14,7 +24,7 @@
                 <svg width="60" height="60" viewBox="0 0 250 250" aria-hidden="true">
                     <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z" fill="currentColor" opacity="0.15"></path>
                     <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin:130px 106px" class="octo-arm"></path>
-                    <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C ## 194.5,69.0 197.7,73.2 200.1,77.6 C ## 213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C ## 181.9,128.9 168.3,122.5 157.7,114.1 C ## ## 157.9,116.9 156.7,120.9 152.7,124.9 L ## ## 141.0,136.5 ## ## C139.9,137.5 141.3,141.4 141.4,141.3 Z" fill="currentColor" class="octo-body"></path>
+                    <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.9,137.5 141.3,141.4 141.4,141.3 Z" fill="currentColor" class="octo-body"></path>
                 </svg>
             </a>
             <div class="header-text">
@@ -28,60 +38,73 @@
     </header>
 
     <main class="container">
-        <!-- 搜索区域 -->
-        <section class="search-section">
-            <div class="search-box">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input type="text" id="searchInput" placeholder="搜索公司名称..." autocomplete="off">
-                <button id="searchBtn">搜索</button>
-            </div>
-            <div class="search-stats">
-                <span id="statsText">加载中...</span>
-            </div>
-        </section>
+        <!-- 列表视图 -->
+        <div id="listView">
+            <!-- 搜索区域 -->
+            <section class="search-section">
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" id="searchInput" placeholder="搜索公司名称..." autocomplete="off">
+                    <button id="searchBtn">搜索</button>
+                </div>
+                <div class="search-stats">
+                    <span id="statsText">加载中...</span>
+                </div>
+                <!-- 加载进度条 -->
+                <div class="load-progress hidden" id="loadProgress">
+                    <div class="load-progress-track">
+                        <div class="load-progress-bar" id="loadProgressBar"></div>
+                    </div>
+                    <span class="load-progress-text" id="loadProgressText"></span>
+                </div>
+            </section>
 
-        <!-- 标签页 -->
-        <div class="tabs">
-            <button class="tab active" data-tab="hot">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
-                最热
-            </button>
-            <button class="tab" data-tab="new">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                最新
-            </button>
-            <button class="tab" data-tab="companies">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
-                公司列表
-            </button>
+            <!-- 标签页 -->
+            <div class="tabs">
+                <button class="tab active" data-tab="hot">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                    最热
+                </button>
+                <button class="tab" data-tab="new">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    最新
+                </button>
+                <button class="tab" data-tab="companies">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+                    公司列表
+                </button>
+            </div>
+
+            <!-- 帖子列表 -->
+            <section class="posts-section" id="postsSection">
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
+                <div class="posts-list" id="postsList"></div>
+                <div class="pagination" id="pagination"></div>
+            </section>
+
+            <!-- 公司列表 -->
+            <section class="companies-section hidden" id="companiesSection">
+                <div class="companies-list" id="companiesList"></div>
+            </section>
         </div>
 
-        <!-- 帖子列表 -->
-        <section class="posts-section" id="postsSection">
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>加载中...</p>
+        <!-- 帖子详情页 -->
+        <section class="post-detail-section hidden" id="postDetailSection">
+            <button class="back-btn" id="backToList">← 返回列表</button>
+            <div class="post-detail-card">
+                <div class="post-detail-body" id="postDetailBody">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>加载中...</p>
+                    </div>
+                </div>
             </div>
-            <div class="posts-list" id="postsList"></div>
-            <div class="pagination" id="pagination"></div>
-        </section>
-
-        <!-- 公司列表 -->
-        <section class="companies-section hidden" id="companiesSection">
-            <div class="companies-list" id="companiesList"></div>
+            <div class="post-detail-comments" id="postDetailComments"></div>
         </section>
     </main>
-
-    <!-- 帖子详情弹窗 -->
-    <div class="modal" id="postModal">
-        <div class="modal-content">
-            <button class="modal-close" id="modalClose">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
-            <div class="modal-body" id="modalBody"></div>
-            <div class="modal-comments" id="modalComments"></div>
-        </div>
-    </div>
 
     <!-- 主题切换按钮 -->
     <button class="fab fab-theme" id="themeToggle" title="切换深色/浅色主题">
