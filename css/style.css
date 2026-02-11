@@ -465,10 +465,16 @@ main.container {
     border-radius: 16px;
     box-shadow: var(--shadow-lg);
     overflow: hidden;
+    min-width: 0;
 }
 
 .post-detail-body {
     padding: 36px;
+    min-height: 400px;
+}
+
+.detail-content.markdown-body {
+    min-height: 200px;
 }
 
 .detail-company {

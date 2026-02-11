@@ -235,9 +235,9 @@
             });
         });
 
-        // 返回按钮
+        // 返回按钮 - 固定跳转到首页，避免外部来源时跳出站外
         el.backToList.addEventListener('click', () => {
-            window.history.back();
+            window.location.hash = '';
         });
 
         // 监听 hash 变化（浏览器前进/后退）
