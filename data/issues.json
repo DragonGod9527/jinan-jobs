@@ -1,5 +1,20 @@
 [
   {
+    "id": "issue_20",
+    "issue_number": 20,
+    "company": "山东汇智",
+    "content": "#### 山东汇智\n\n## 公司信息\n\n**公司名称：** \n<!-- 填写公司全称 -->\n\n**公司地址：** \n银荷大厦\n\n**主要业务：** \n<!-- 填写公司主营业务 -->\n\n---\n\n## 我的评价\n\n<!-- 请详细描述你的经历和评价，可以包括：\n- 面试经历\n- 工作环境\n- 薪资待遇\n- 加班情况\n- 领导/同事\n- 离职经历\n- 其他想说的\n-->\n\n\n\n\n---\n\n⚠️ **免责声明**：本评价仅代表个人观点，请理性看待。\n",
+    "author": "YZX123YZX-ctrl",
+    "uv": 0,
+    "pv": 0,
+    "status": 1,
+    "created_at": "2026-02-11T08:31:59Z",
+    "updated_at": "2026-02-11T08:31:59Z",
+    "replies": [],
+    "labels": [],
+    "url": "https://github.com/DragonGod9527/jinan-jobs/issues/20"
+  },
+  {
     "id": "issue_19",
     "issue_number": 19,
     "company": "让热热热",
